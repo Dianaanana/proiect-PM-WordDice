@@ -1,38 +1,3 @@
-
-//#include <IRremote.h>
-//int IRPin = 4;         // Transmitter pin
-//int ledPin = 14;
-//
-//IRsend irsend(IRPin);  // Create object IR transmitter
-//void setup() {
-//  pinMode(ledPin, OUTPUT);
-//}
-//
-//void loop() {
-//    unsigned long tData = 0x1;   // Variable to sent
-//    irsend.sendSony(tData, 16);  // Sent data
-//    digitalWrite(ledPin, HIGH);
-//    delay(50); // Delay 50 miliseconds
-//
-//    tData = 0x0;   
-//    irsend.sendSony(tData, 16);  
-//    digitalWrite(ledPin, LOW);
-//    delay(50);
-//}
-
-/*
- * SimpleSender.cpp
- *
- *  Demonstrates sending IR codes in standard format with address and command
- *  An extended example for sending can be found as SendDemo.
- *
- *  Copyright (C) 2020-2022  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
- *
- *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
- *
- *  MIT License
- */
 #include <Arduino.h>
 
 #if !defined(ARDUINO_ESP32C3_DEV) // This is due to a bug in RISC-V compiler, which requires unused function sections :-(.
@@ -70,7 +35,7 @@ void setup() {
  * and a variable 8 bit command.
  * There are exceptions like Sony and Denon, which have 5 bit address.
  */
-uint8_t sCommand = 0x34;
+uint8_t sCommand = 0x00;
 uint8_t sRepeats = 0;
 
 void loop() {
@@ -93,7 +58,14 @@ void loop() {
     /*
      * Increment send values
      */
-    sCommand += 0x11;
+//    sCommand += 0x11;
+    if(sCommand == 0x0)
+    {
+      sCommand = 0x1;
+    } else 
+    {
+      sCommand = 0x0;
+    }
     sRepeats++;
     
     // clip repeats at 4
