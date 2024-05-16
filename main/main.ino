@@ -2,102 +2,183 @@
 #include "MyLedControl.h"
 #include "binary.h"
 #include <IRremote.hpp>
+#include <IRProtocol.h>
 #include "PinDefinitionsAndMore.h"
 
+//--------------------------------------DEFINES---------------------------------------
 #define DIN 23
 #define CLK 18
 #define CS 5
-LedControl lc=LedControl(DIN,CLK,CS,1);
+#define TX_STANGA 4
+#define RX_STANGA 15
+#define TX_DREAPTA 2
+#define RX_DREAPTA 12
 
-// delay time between faces
-unsigned long delaytime=1000;
+//-----------------------------------------CONST--------------------------------------
+const byte a[8] = {0x3C, 0x42, 0x42, 0x7E, 0x42, 0x42, 0x42, 0x42}, a_rev[8] = {0xC3, 0xBD, 0xBD, 0x81, 0xBD, 0xBD, 0xBD, 0xBD};
+const byte b[8] = {0x7C, 0x42, 0x42, 0x7C, 0x42, 0x42, 0x42, 0x7C}, b_rev[8] = {0x83, 0xBD, 0xBD, 0x83, 0xBD, 0xBD, 0xBD, 0x83};
+const byte c[8] = {0x3E, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x3E}, c_rev[8] = {0xC1, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xC1};
+const byte d[8] = {0x7C, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7C}, d_rev[8] = {0x83, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0x83};
+const byte e[8] = {0x7E, 0x40, 0x40, 0x78, 0x40, 0x40, 0x40, 0x7E}, e_rev[8] = {0x81, 0xBF, 0xBF, 0x87, 0xBF, 0xBF, 0xBF, 0x81};
+const byte f[8] = {0x7E, 0x40, 0x40, 0x78, 0x40, 0x40, 0x40, 0x40}, f_rev[8] = {0x81, 0xBF, 0xBF, 0x87, 0xBF, 0xBF, 0xBF, 0xBF};
+const byte g[8] = {0x3C, 0x42, 0x42, 0x40, 0x4E, 0x42, 0x42, 0x3C}, g_rev[8] = {0xC3, 0xBD, 0xBD, 0xBF, 0xB1, 0xBD, 0xBD, 0xC3};
+const byte h[8] = {0x42, 0x42, 0x42, 0x7E, 0x42, 0x42, 0x42, 0x42}, h_rev[8] = {0xBD, 0xBD, 0xBD, 0x81, 0xBD, 0xBD, 0xBD, 0xBD};
+const byte i[8] = {0x7C, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x7C}, i_rev[8] = {0x83, 0xEF, 0xEF, 0xEF, 0xEF, 0xEF, 0xEF, 0x83};
+const byte j[8] = {0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x42, 0x3C}, j_rev[8] = {0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xBD, 0xC3};
+const byte k[8] = {0x44, 0x48, 0x50, 0x60, 0x50, 0x48, 0x44, 0x42}, k_rev[8] = {0xBB, 0xB7, 0xAF, 0x9F, 0xAF, 0xB7, 0xBB, 0xBD};
+const byte l[8] = {0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x7E}, l_rev[8] = {0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0x81};
+const byte m[8] = {0x42, 0x66, 0x5A, 0x42, 0x42, 0x42, 0x42, 0x42}, m_rev[8] = {0xBD, 0x99, 0xA5, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD};
+const byte n[8] = {0x42, 0x62, 0x52, 0x4A, 0x46, 0x42, 0x42, 0x42}, n_rev[8] = {0xBD, 0x9D, 0xAD, 0xB5, 0xB9, 0xBD, 0xBD, 0xBD};
+const byte o[8] = {0x3C, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x3C}, o_rev[8] = {0xC3, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xC3};
+const byte p[8] = {0x3C, 0x42, 0x42, 0x7C, 0x40, 0x40, 0x40, 0x40}, p_rev[8] = {0xC3, 0xBD, 0xBD, 0x83, 0xBF, 0xBF, 0xBF, 0xBF};
+const byte q[8] = {0x3C, 0x42, 0x42, 0x42, 0x42, 0x4A, 0x44, 0x3B}, q_rev[8] = {0xC3, 0xBD, 0xBD, 0xBD, 0xBD, 0xB5, 0xBB, 0xC4};
+const byte r[8] = {0x3C, 0x42, 0x42, 0x7C, 0x50, 0x48, 0x44, 0x44}, r_rev[8] = {0xC3, 0xBD, 0xBD, 0x83, 0xAF, 0xB7, 0xBB, 0xBB};
+const byte s[8] = {0x3C, 0x42, 0x40, 0x3C, 0x02, 0x02, 0x42, 0x3C}, s_rev[8] = {0xC3, 0xBD, 0xBF, 0xC3, 0xFD, 0xFD, 0xBD, 0xC3};
+const byte t[8] = {0x7C, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10}, t_rev[8] = {0x83, 0xEF, 0xEF, 0xEF, 0xEF, 0xEF, 0xEF, 0xEF};
+const byte u[8] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x3C}, u_rev[8] = {0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xC3};
+const byte v[8] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x24, 0x18}, v_rev[8] = {0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xDB, 0xE7};
+const byte w[8] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x5A, 0x66, 0x42}, w_rev[8] = {0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xA5, 0x99, 0xBD};
+const byte x[8] = {0x42, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x42}, x_rev[8] = {0xBD, 0xBD, 0xDB, 0xE7, 0xE7, 0xDB, 0xBD, 0xBD};
+const byte y[8] = {0x42, 0x42, 0x42, 0x24, 0x18, 0x18, 0x18, 0x18}, y_rev[8] = {0xBD, 0xBD, 0xBD, 0xDB, 0xE7, 0xE7, 0xE7, 0xE7};
+const byte z[8] = {0x7E, 0x02, 0x04, 0x18, 0x20, 0x40, 0x40, 0x7E}, z_rev[8] = {0x81, 0xFD, 0xFB, 0xE7, 0xDF, 0xBF, 0xBF, 0x81};\
+const byte *alphabet[26] = {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z};
+const byte *alphabet_rev[26] = {a_rev, b_rev, c_rev, d_rev, e_rev, f_rev, g_rev, h_rev, i_rev, j_rev, k_rev, l_rev, m_rev, n_rev,
+o_rev, p_rev, q_rev, r_rev, s_rev, t_rev, u_rev, v_rev, w_rev, x_rev, y_rev, z_rev};
+const byte digits[10][8] = {
+    {0x3C, 0x42, 0x46, 0x4A, 0x52, 0x62, 0x42, 0x3C}, // 0
+    {0x08, 0x18, 0x28, 0x08, 0x08, 0x08, 0x08, 0x3E}, // 1
+    {0x3C, 0x42, 0x02, 0x04, 0x08, 0x10, 0x20, 0x7E}, // 2
+    {0x3C, 0x42, 0x02, 0x1C, 0x02, 0x02, 0x42, 0x3C}, // 3
+    {0x04, 0x0C, 0x14, 0x24, 0x44, 0x7E, 0x04, 0x04}, // 4
+    {0x7E, 0x40, 0x40, 0x7C, 0x02, 0x02, 0x42, 0x3C}, // 5
+    {0x3C, 0x42, 0x40, 0x7C, 0x42, 0x42, 0x42, 0x3C}, // 6
+    {0x7E, 0x02, 0x04, 0x08, 0x10, 0x10, 0x10, 0x10}, // 7
+    {0x3C, 0x42, 0x42, 0x3C, 0x42, 0x42, 0x42, 0x3C}, // 8
+    {0x3C, 0x42, 0x42, 0x3E, 0x02, 0x02, 0x42, 0x3C}  // 9
+};
+const byte digits_rev[10][8] = {
+    {0xC3, 0xBD, 0xB9, 0xB5, 0xAD, 0x9D, 0xBD, 0xC3}, // 0
+    {0xF7, 0xE7, 0xD7, 0xF7, 0xF7, 0xF7, 0xF7, 0xC1}, // 1
+    {0xC3, 0xBD, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0x81}, // 2
+    {0xC3, 0xBD, 0xFD, 0xE3, 0xFD, 0xFD, 0xBD, 0xC3}, // 3
+    {0xFB, 0xF3, 0xEB, 0xDB, 0xBB, 0x81, 0xFB, 0xFB}, // 4
+    {0x81, 0xBF, 0xBF, 0x83, 0xFD, 0xFD, 0xBD, 0xC3}, // 5
+    {0xC3, 0xBD, 0xBF, 0x83, 0xBD, 0xBD, 0xBD, 0xC3}, // 6
+    {0x81, 0xFD, 0xFB, 0xF7, 0xEF, 0xEF, 0xEF, 0xEF}, // 7
+    {0xC3, 0xBD, 0xBD, 0xC3, 0xBD, 0xBD, 0xBD, 0xC3}, // 8
+    {0xC3, 0xBD, 0xBD, 0xC1, 0xFD, 0xFD, 0xBD, 0xC3}  // 9
+};
 
-// letters
-const byte a[8]={B00111100,B01000010,B01000010,B01111110,B01000010,B01000010,B01000010,B01000010};
-const byte b[8]={B01111100,B01000010,B01000010,B01111100,B01000010,B01000010,B01000010,B01111100};
-const byte c[8]={B00111110,B01000000,B01000000,B01000000,B01000000,B01000000,B01000000,B00111110};
-const byte d[8]={B01111100,B01000010,B01000010,B01000010,B01000010,B01000010,B01000010,B01111100};
-const byte e[8]={B01111110,B01000000,B01000000,B01111000,B01000000,B01000000,B01000000,B01111110};
-const byte f[8]={B01111110,B01000000,B01000000,B01111000,B01000000,B01000000,B01000000,B01000000};
-const byte g[8]={B00111100,B01000010,B01000010,B01000000,B01001110,B01000010,B01000010,B00111100};
-const byte h[8]={B01000010,B01000010,B01000010,B01111110,B01000010,B01000010,B01000010,B01000010};
-const byte i[8]={B01111100,B00010000,B00010000,B00010000,B00010000,B00010000,B00010000,B01111100};
-const byte j[8]={B00000010,B00000010,B00000010,B00000010,B00000010,B00000010,B01000010,B00111100};
-const byte k[8]={B01000100,B01001000,B01010000,B01100000,B01010000,B01001000,B01000100,B01000010};
-const byte l[8]={B01000000,B01000000,B01000000,B01000000,B01000000,B01000000,B01000000,B01111110};
-const byte m[8]={B01000010,B01100110,B01011010,B01000010,B01000010,B01000010,B01000010,B01000010};
-const byte n[8]={B01000010,B01100010,B01010010,B01001010,B01000110,B01000010,B01000010,B01000010};
-const byte o[8]={B00111100,B01000010,B01000010,B01000010,B01000010,B01000010,B01000010,B00111100};
-const byte p[8]={B00111100,B01000010,B01000010,B01111100,B01000000,B01000000,B01000000,B01000000};
-const byte q[8]={B00111100,B01000010,B01000010,B01000010,B01000010,B01001010,B01000100,B00111011};
-const byte r[8]={B00111100,B01000010,B01000010,B01111100,B01010000,B01001000,B01000100,B01000100};
-const byte s[8]={B00111100,B01000010,B01000000,B00111100,B00000010,B00000010,B01000010,B00111100};
-const byte t[8]={B01111100,B00010000,B00010000,B00010000,B00010000,B00010000,B00010000,B00010000};
-const byte u[8]={B01000010,B01000010,B01000010,B01000010,B01000010,B01000010,B01000010,B00111100};
-const byte v[8]={B01000010,B01000010,B01000010,B01000010,B01000010,B01000010,B00100100,B00011000};
-const byte w[8]={B01000010,B01000010,B01000010,B01000010,B01000010,B01011010,B01100110,B01000010};
-const byte x[8]={B01000010,B01000010,B00100100,B00011000,B00011000,B00100100,B01000010,B01000010};
-const byte y[8]={B01000100,B01000100,B00101000,B00010000,B00010000,B00010000,B00010000,B00010000};
-const byte z[8]={B01111110,B00000100,B00001000,B00010000,B00100000,B01000000,B01000000,B01111110};
-const byte* alphabet[26] = {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z};
+//------------------------------------GLOBAL VARIABLES--------------------------------
+LedControl lc = LedControl(DIN, CLK, CS, 1);
+IRrecv IrReceiverSt(RX_STANGA);
+IRrecv IrReceiverDt(RX_DREAPTA);
 
-void display_letter(const byte* letter)
+
+
+uint16_t dataSt;
+uint16_t dataDt;
+
+void display_character(const byte *letter)
 {
-  lc.setRow(0,0,letter[0]);
-  lc.setRow(0,1,letter[1]);
-  lc.setRow(0,2,letter[2]);
-  lc.setRow(0,3,letter[3]);
-  lc.setRow(0,4,letter[4]);
-  lc.setRow(0,5,letter[5]);
-  lc.setRow(0,6,letter[6]);
-  lc.setRow(0,7,letter[7]);
+  lc.setRow(0, 0, letter[0]);
+  lc.setRow(0, 1, letter[1]);
+  lc.setRow(0, 2, letter[2]);
+  lc.setRow(0, 3, letter[3]);
+  lc.setRow(0, 4, letter[4]);
+  lc.setRow(0, 5, letter[5]);
+  lc.setRow(0, 6, letter[6]);
+  lc.setRow(0, 7, letter[7]);
 }
-//
-//void drawFaces(){
-//    for (int i = 0; i < 26; i++) {
-//        display_letter(alphabet[i]);
-//        delay(delaytime);
-//    }
-//}
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
-  lc.shutdown(0,false);
-  lc.setIntensity(0,8);
+  lc.shutdown(0, false);
+  lc.setIntensity(0, 1);
   lc.clearDisplay(0);
 
-  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+  IrReceiverDt.begin(RX_DREAPTA, ENABLE_LED_FEEDBACK);
+  IrReceiverSt.begin(RX_STANGA, ENABLE_LED_FEEDBACK);
+  IrReceiverDt.initDecodedIRData();
+  IrReceiverSt.initDecodedIRData();
   Serial.print(F("Ready to receive IR signals of protocols: "));
   printActiveIRProtocols(&Serial);
-  Serial.println(F("at pin " STR(IR_RECEIVE_PIN)));
-  
+  Serial.println(F("at pin " STR(RX_DREAPTA)));
+  Serial.println(F("at pin " STR(RX_STANGA)));
 }
 
-
-void loop(){
-  if (IrReceiver.decode()) {
-    if (IrReceiver.decodedIRData.protocol == UNKNOWN)
+void loop()
+{
+  for(int i = 0; i <26; i++)
+  {
+    display_character(alphabet_rev[i]);
+    delay(500);
+  }
+  for(int i = 0; i <10; i++)
+  {
+    display_character(digits_rev[i]);
+    delay(500);
+  }
+  for(int i = 0; i <26; i++)
+  {
+    display_character(alphabet[i]);
+    delay(500);
+  }
+  for(int i = 0; i <10; i++)
+  {
+    display_character(digits[i]);
+    delay(500);
+  }
+  if (IrReceiverDt.decode())
+  {
+    if (IrReceiverDt.decodedIRData.protocol == UNKNOWN)
     {
-        Serial.println(F("Received noise or an unknown (or not yet enabled) protocol"));
-        // We have an unknown protocol here, print extended info
-        IrReceiver.printIRResultRawFormatted(&Serial, true);
-        IrReceiver.resume(); // Do it here, to preserve raw data for printing with printIRResultRawFormatted()
-    } else {
-        IrReceiver.resume(); // Early enable receiving of the next IR frame
-        IrReceiver.printIRResultShort(&Serial);
-        IrReceiver.printIRSendUsage(&Serial);
+      Serial.println(F("Received noise on DREAPTA"));
+      // We have an unknown protocol here, print extended info
+      IrReceiverDt.printIRResultRawFormatted(&Serial, true);
+      IrReceiverDt.resume(); // Do it here, to preserve raw data for printing with printIRResultRawFormatted()
+    }
+    else
+    {
+      IrReceiverDt.resume(); // Early enable receiving of the next IR frame
+      IrReceiverDt.printIRResultShort(&Serial);
+      IrReceiverDt.printIRSendUsage(&Serial);
     }
     Serial.println();
+    if (IrReceiverSt.decode())
+    {
+      if (IrReceiverSt.decodedIRData.protocol == UNKNOWN)
+      {
+        Serial.println(F("Received noise on DREAPTA"));
+        // We have an unknown protocol here, print extended info
+        IrReceiverSt.printIRResultRawFormatted(&Serial, true);
+        IrReceiverSt.resume(); // Do it here, to preserve raw data for printing with printIRResultRawFormatted()
+      }
+      else
+      {
+        IrReceiverSt.resume(); // Early enable receiving of the next IR frame
+        IrReceiverSt.printIRResultShort(&Serial);
+        IrReceiverSt.printIRSendUsage(&Serial);
+      }
+      Serial.println();
 
-    /*
-     * Finally, check the received data and perform actions according to the received command
-     */
-    if (IrReceiver.decodedIRData.command == 0x0)
-    {
-      display_letter(a);
-    } else if (IrReceiver.decodedIRData.command == 0x1)
-    {
-        display_letter(b);
+      /*
+       * Finally, check the received data and perform actions according to the received command
+       */
+      //    dataSt = IrReceiverSt.decodedIRData.command;
+      //    dataDt = IrReceiverDt.decodedIRData.command;
+      if (IrReceiverSt.decodedIRData.command == 0x0)
+      {
+        display_character(digits[1]);
+      }
+      //
+      //    if(!dataSt && dataDt)
+      //    {
+      //      display_character(digits[1]);
+      //    }
+
+      
     }
   }
 }
